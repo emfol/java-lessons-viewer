@@ -1,0 +1,11 @@
+# Binary Files
+*.class
+
+# Target Folder
+/target/
+
+# Eclipse Files
+/.classpath
+/.project
+/.settings/
+
