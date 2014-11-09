@@ -59,7 +59,7 @@ public final class Viewer extends WindowAdapter
         if (frame != null) {
             dialog = new FileDialog(
                 frame,
-                "Please select an image file or an image producer class...",
+                "Please select an image file...",
                 FileDialog.LOAD
             );
             directory = this.workingDirectory;
@@ -82,23 +82,30 @@ public final class Viewer extends WindowAdapter
         }
     }
 
+    private void showClassDialog() {
+        System.out.println("A class dialog should appear...");
+    }
+
     private void refresh() {
         // @todo: load file or class
-        System.out.format("Currently Selected File: %s\n\n", this.selectedFile.getPath());
+        System.out.format("Currently Selected File: %s\n", this.selectedFile.getPath());
     }
 
     private MenuBar getViewerMenuBar() {
 
         MenuBar mbMain;
-        MenuItem miOpen;
-        MenuItem miExit;
+        MenuItem miOpen, miLoad, miExit;
         Menu mFile;
 
         // build menu items
         miOpen = new MenuItem();
-        miOpen.setLabel("Open...");
-        miOpen.setActionCommand("open");
+        miOpen.setLabel("Open Image...");
+        miOpen.setActionCommand("open-image-file");
         miOpen.addActionListener(this);
+        miLoad = new MenuItem();
+        miLoad.setLabel("Load Class...");
+        miLoad.setActionCommand("load-class");
+        miLoad.addActionListener(this);
         miExit = new MenuItem();
         miExit.setLabel("Exit");
         miExit.setActionCommand("exit");
@@ -108,6 +115,7 @@ public final class Viewer extends WindowAdapter
         mFile = new Menu();
         mFile.setLabel("File");
         mFile.add(miOpen);
+        mFile.add(miLoad);
         mFile.add(miExit);
 
         // build menu bar
@@ -137,7 +145,7 @@ public final class Viewer extends WindowAdapter
 
     public void run() {
         Frame frame = this.getViewerFrame();
-        frame.setBounds(10, 10, 480, 320);
+        frame.setBounds(20, 20, 480, 320);
         frame.setVisible(true);
     }
 
@@ -147,8 +155,10 @@ public final class Viewer extends WindowAdapter
 
     public void actionPerformed(ActionEvent e) {
         String action = e.getActionCommand();
-        if (action.equals("open")) {
+        if (action.equals("open-image-file")) {
             this.showFileDialog();
+        } else if (action.equals("load-class")) {
+            this.showClassDialog();
         } else if (action.equals("exit")) {
             this.exit();
         }
