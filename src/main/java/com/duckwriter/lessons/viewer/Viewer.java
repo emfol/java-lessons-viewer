@@ -1,5 +1,7 @@
 package com.duckwriter.lessons.viewer;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.io.File;
 import java.awt.Window;
 import java.awt.Frame;
@@ -20,15 +22,20 @@ public final class Viewer extends WindowAdapter
      * Constants
      */
 
-    private static final String TITLE = "Viewer - Shapes and Images";
+    private static final String CACHE_KEY_FILEDIALOG = "fileDialog";
+    private static final String CACHE_KEY_CLASSDIALOG = "classDialog";
+    private static final String CACHE_KEY_DIRECTORY = "directory";
+    private static final String TITLE = "Viewer - Images and Shapes";
 
     /*
      * Private Fields
      */
 
-    private Frame viewerFrame;
-    private File workingDirectory;
+    private final Frame frame;
+    private final Map<String, Object> cache;
     private File selectedFile;
+    private String selectedClass;
+    private boolean isNotInitialized;
 
     /*
      * Constructors
@@ -36,6 +43,9 @@ public final class Viewer extends WindowAdapter
 
     private Viewer() {
         super();
+        this.frame = new Frame();
+        this.cache = new HashMap<String, Object>();
+        this.isNotInitialized = true;
     }
 
     /*
@@ -43,55 +53,86 @@ public final class Viewer extends WindowAdapter
      */
 
     private void exit() {
-        Frame frame = this.viewerFrame;
-        if (frame != null) {
-            frame.setVisible(false);
-            frame.dispose();
-            this.viewerFrame = null;
-        }
+        this.frame.setVisible(false);
+        this.frame.dispose();
     }
 
     private void showFileDialog() {
-        FileDialog dialog;
+
+        FileDialog fileDialog;
         File file, directory;
         String filePath, dirPath;
-        Frame frame = this.viewerFrame;
-        if (frame != null) {
-            dialog = new FileDialog(
-                frame,
+
+        fileDialog = (FileDialog)this.cache.get(CACHE_KEY_FILEDIALOG);
+        if (fileDialog == null) {
+            fileDialog = new FileDialog(
+                this.frame,
                 "Please select an image file...",
                 FileDialog.LOAD
             );
-            directory = this.workingDirectory;
-            if (directory != null) {
-                dialog.setDirectory(directory.getPath());
-            }
-            // displaying a file dialog blocks the calling thread
-            dialog.setVisible(true);
-            dirPath = dialog.getDirectory();
-            filePath = dialog.getFile();
-            if (filePath != null && dirPath != null) {
-                directory = new File(dirPath);
-                file = new File(directory, filePath);
-                if (file.exists() && file.isFile()) {
-                    this.selectedFile = file;
-                    this.workingDirectory = directory;
-                    this.refresh();
-                }
+            this.cache.put(CACHE_KEY_FILEDIALOG, fileDialog);
+        }
+
+        // check for previous directory
+        directory = (File)this.cache.get(CACHE_KEY_DIRECTORY);
+        if (directory != null) {
+            fileDialog.setDirectory(directory.getPath());
+        }
+
+        // displaying a file dialog blocks the calling thread
+        fileDialog.setVisible(true);
+        dirPath = fileDialog.getDirectory();
+        filePath = fileDialog.getFile();
+        if (filePath != null && dirPath != null) {
+            directory = new File(dirPath);
+            file = new File(directory, filePath);
+            if (file.exists() && file.isFile()) {
+                this.cache.put(CACHE_KEY_DIRECTORY, directory);
+                this.selectedFile = file;
+                this.selectedClass = null;
+                this.refresh();
             }
         }
+
     }
 
     private void showClassDialog() {
-        System.out.println("A class dialog should appear...");
+
+        ClassDialog classDialog;
+        String selCls;
+
+        classDialog = (ClassDialog)this.cache.get(CACHE_KEY_CLASSDIALOG);
+        if (classDialog == null) {
+            classDialog = new ClassDialog(this.frame);
+            this.cache.put(CACHE_KEY_CLASSDIALOG, classDialog);
+        }
+        classDialog.setVisible(true);
+        selCls = classDialog.getSelectedClass();
+        if (selCls != null) {
+            this.selectedClass = selCls;
+            this.selectedFile = null;
+            this.refresh();
+        }
+
     }
 
     private void refresh() {
         // @todo: load file or class
-        System.out.format("Currently Selected File: %s\n", this.selectedFile.getPath());
+        System.out.format(
+            "Currently Selected File: %s\n",
+            this.selectedFile != null
+                ? this.selectedFile.getPath()
+                : "None..."
+        );
+        System.out.format(
+            "Currently Selected Class: %s\n",
+            this.selectedClass != null
+                ? this.selectedClass
+                : "None..."
+        );
     }
 
-    private MenuBar getViewerMenuBar() {
+    private MenuBar buildMenuBar() {
 
         MenuBar mbMain;
         MenuItem miOpen, miLoad, miExit;
@@ -126,27 +167,30 @@ public final class Viewer extends WindowAdapter
 
     }
 
-    private Frame getViewerFrame() {
-
-        Frame frame = this.viewerFrame;
-        if (frame == null) {
-            frame = new Frame(TITLE);
-            frame.addWindowListener(this);
-            frame.setMenuBar(this.getViewerMenuBar());
-            this.viewerFrame = frame;
-        }
-        return frame;
-
-    }
 
     /*
      * Runnable Interface
      */
 
     public void run() {
-        Frame frame = this.getViewerFrame();
-        frame.setBounds(20, 20, 480, 320);
-        frame.setVisible(true);
+
+        boolean shouldInitialize;
+
+        synchronized (this) {
+            shouldInitialize = this.isNotInitialized;
+            if (shouldInitialize) {
+                this.isNotInitialized = false;
+            }
+        }
+
+        if (shouldInitialize) {
+            this.frame.setTitle(TITLE);
+            this.frame.addWindowListener(this);
+            this.frame.setMenuBar(this.buildMenuBar());
+            this.frame.setBounds(20, 20, 480, 320);
+            this.frame.setVisible(true);
+        }
+
     }
 
     /*
