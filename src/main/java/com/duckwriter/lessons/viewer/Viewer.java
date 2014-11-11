@@ -1,9 +1,9 @@
 package com.duckwriter.lessons.viewer;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.File;
-import java.awt.Window;
 import java.awt.Frame;
 import java.awt.Menu;
 import java.awt.MenuItem;
@@ -31,11 +31,11 @@ public final class Viewer extends WindowAdapter
      * Private Fields
      */
 
+    private AtomicBoolean initState;
     private final Frame frame;
     private final Map<String, Object> cache;
     private File selectedFile;
-    private String selectedClass;
-    private boolean isNotInitialized;
+    private Class<?> selectedClass;
 
     /*
      * Constructors
@@ -43,9 +43,9 @@ public final class Viewer extends WindowAdapter
 
     private Viewer() {
         super();
+        this.initState = new AtomicBoolean(false);
         this.frame = new Frame();
         this.cache = new HashMap<String, Object>();
-        this.isNotInitialized = true;
     }
 
     /*
@@ -55,6 +55,7 @@ public final class Viewer extends WindowAdapter
     private void exit() {
         this.frame.setVisible(false);
         this.frame.dispose();
+        this.cache.clear();
     }
 
     private void showFileDialog() {
@@ -99,7 +100,7 @@ public final class Viewer extends WindowAdapter
     private void showClassDialog() {
 
         ClassDialog classDialog;
-        String selCls;
+        Class<?> selCls;
 
         classDialog = (ClassDialog)this.cache.get(CACHE_KEY_CLASSDIALOG);
         if (classDialog == null) {
@@ -117,7 +118,7 @@ public final class Viewer extends WindowAdapter
     }
 
     private void refresh() {
-        // @todo: load file or class
+        // TODO: load file or class
         System.out.format(
             "Currently Selected File: %s\n",
             this.selectedFile != null
@@ -167,30 +168,24 @@ public final class Viewer extends WindowAdapter
 
     }
 
-
-    /*
-     * Runnable Interface
-     */
-
-    public void run() {
-
-        boolean shouldInitialize;
-
-        synchronized (this) {
-            shouldInitialize = this.isNotInitialized;
-            if (shouldInitialize) {
-                this.isNotInitialized = false;
-            }
-        }
-
-        if (shouldInitialize) {
+    private void init() {
+        if (this.initState.compareAndSet(false, true)) {
             this.frame.setTitle(TITLE);
             this.frame.addWindowListener(this);
             this.frame.setMenuBar(this.buildMenuBar());
             this.frame.setBounds(20, 20, 480, 320);
             this.frame.setVisible(true);
         }
+    }
 
+    /*
+     * Runnable Interface
+     */
+
+    public void run() {
+        if (EventQueue.isDispatchThread()) {
+            this.init();
+        }
     }
 
     /*
