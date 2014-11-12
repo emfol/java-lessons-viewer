@@ -30,7 +30,7 @@ class ClassDialog extends Dialog
         ACTION_OK = "OK";
         ACTION_CANCEL = "CANCEL";
         EMPTY_STRING = "";
-        NONBLANK_REGEX = Pattern.compile("\\S+");
+        NONBLANK_REGEX = Pattern.compile("\\s*(\\S+)\\s*");
     }
 
     private final AtomicBoolean initState;
@@ -138,7 +138,7 @@ class ClassDialog extends Dialog
         if (action.equals(ACTION_OK)) {
             text = this.textField.getText();
             matcher = NONBLANK_REGEX.matcher(text);
-            text = matcher.matches() ? matcher.group() : EMPTY_STRING;
+            text = matcher.matches() ? matcher.group(1) : EMPTY_STRING;
             this.loadClassByName(text);
             this.setVisible(false);
         } else if (action.equals(ACTION_CANCEL)) {

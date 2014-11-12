@@ -4,12 +4,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.File;
+import java.awt.Shape;
 import java.awt.Frame;
 import java.awt.Menu;
 import java.awt.MenuItem;
 import java.awt.MenuBar;
 import java.awt.FileDialog;
 import java.awt.EventQueue;
+import java.awt.image.ImageProducer;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -105,6 +107,8 @@ public final class Viewer extends WindowAdapter
         classDialog = (ClassDialog)this.cache.get(CACHE_KEY_CLASSDIALOG);
         if (classDialog == null) {
             classDialog = new ClassDialog(this.frame);
+            classDialog.addExpectedClass(Shape.class);
+            classDialog.addExpectedClass(ImageProducer.class);
             this.cache.put(CACHE_KEY_CLASSDIALOG, classDialog);
         }
         classDialog.setVisible(true);
