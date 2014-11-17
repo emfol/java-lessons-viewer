@@ -103,7 +103,7 @@ class ClassDialog extends Dialog
                 ldCls = Class.forName(className);
             } catch (ClassNotFoundException e) {
                 // TODO: Improve UI for this...
-                System.out.format("Class \"%s\" could not be found...\n", className);
+                System.err.printf("Class \"%s\" could not be found...\n", className);
             }
         }
 
@@ -129,6 +129,7 @@ class ClassDialog extends Dialog
      * Action Listener Methods
      */
 
+    @Override
     public void actionPerformed(ActionEvent e) {
 
         String text, action;

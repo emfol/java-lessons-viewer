@@ -33,7 +33,7 @@ public final class Viewer extends WindowAdapter
      * Private Fields
      */
 
-    private AtomicBoolean initState;
+    private final AtomicBoolean initState;
     private final Frame frame;
     private final Map<String, Object> cache;
     private File selectedFile;
@@ -186,6 +186,7 @@ public final class Viewer extends WindowAdapter
      * Runnable Interface
      */
 
+    @Override
     public void run() {
         if (EventQueue.isDispatchThread()) {
             this.init();
@@ -196,6 +197,7 @@ public final class Viewer extends WindowAdapter
      * Action Listener Interface
      */
 
+    @Override
     public void actionPerformed(ActionEvent e) {
         String action = e.getActionCommand();
         if (action.equals("open-image-file")) {

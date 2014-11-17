@@ -4,7 +4,7 @@ import org.junit.Test;
 
 public class ViewerTest extends Object {
 
-    public ViewerTest(){
+    public ViewerTest() {
         super();
     }
 
