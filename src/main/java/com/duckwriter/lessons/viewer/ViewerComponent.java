@@ -54,7 +54,8 @@ public class ViewerComponent extends Component {
             && (imageWidth = this.image.getWidth(this)) > 0
             && (imageHeight = this.image.getHeight(this)) > 0
             && (viewWidth = this.getWidth()) > 0
-            && (viewHeight = this.getHeight()) > 0) {
+            && (viewHeight = this.getHeight()) > 0
+        ) {
             this.viewRect.width = viewWidth;
             this.viewRect.height = viewHeight;
             adjustViewRect(this.viewRect, imageWidth, imageHeight);

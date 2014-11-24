@@ -1,16 +1,12 @@
 package com.duckwriter.lessons.viewer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.Map;
-import java.util.HashMap;
-import java.io.File;
-import java.awt.Shape;
+import java.awt.EventQueue;
 import java.awt.Frame;
+import java.awt.Image;
 import java.awt.Menu;
 import java.awt.MenuItem;
 import java.awt.MenuBar;
-import java.awt.FileDialog;
-import java.awt.EventQueue;
 import java.awt.image.ImageProducer;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,11 +29,12 @@ public final class Viewer extends WindowAdapter
      * Private Fields
      */
 
-    private final AtomicBoolean initState;
+    private final AtomicBoolean isRunning;
     private final Frame frame;
-    private final Map<String, Object> cache;
-    private File selectedFile;
-    private Class<?> selectedClass;
+    private final ViewerComponent viewerComponent;
+    private final Label statusComponent;
+    private boolean initialized;
+
 
     /*
      * Constructors
@@ -45,58 +42,21 @@ public final class Viewer extends WindowAdapter
 
     private Viewer() {
         super();
-        this.initState = new AtomicBoolean(false);
+        this.isRunning = new AtomicBoolean(false);
         this.frame = new Frame();
-        this.cache = new HashMap<String, Object>();
+        this.viewerComponent = new ViewerComponent();
+        this.statusComponent = new Label();
+        this.initialized = false;
     }
 
     /*
      * Private Methods
      */
 
-    private void exit() {
-        this.frame.setVisible(false);
-        this.frame.dispose();
-        this.cache.clear();
-    }
-
-    private void showFileDialog() {
-
-        FileDialog fileDialog;
-        File file, directory;
-        String filePath, dirPath;
-
-        fileDialog = (FileDialog)this.cache.get(CACHE_KEY_FILEDIALOG);
-        if (fileDialog == null) {
-            fileDialog = new FileDialog(
-                this.frame,
-                "Please select an image file...",
-                FileDialog.LOAD
-            );
-            this.cache.put(CACHE_KEY_FILEDIALOG, fileDialog);
+    private void stop() {
+        if (this.isRunning.compareAndSet(true, false)) {
+            this.frame.setVisible(false);
         }
-
-        // check for previous directory
-        directory = (File)this.cache.get(CACHE_KEY_DIRECTORY);
-        if (directory != null) {
-            fileDialog.setDirectory(directory.getPath());
-        }
-
-        // displaying a file dialog blocks the calling thread
-        fileDialog.setVisible(true);
-        dirPath = fileDialog.getDirectory();
-        filePath = fileDialog.getFile();
-        if (filePath != null && dirPath != null) {
-            directory = new File(dirPath);
-            file = new File(directory, filePath);
-            if (file.exists() && file.isFile()) {
-                this.cache.put(CACHE_KEY_DIRECTORY, directory);
-                this.selectedFile = file;
-                this.selectedClass = null;
-                this.refresh();
-            }
-        }
-
     }
 
     private void showClassDialog() {
@@ -137,7 +97,7 @@ public final class Viewer extends WindowAdapter
         );
     }
 
-    private MenuBar buildMenuBar() {
+    private MenuBar createMenuBar() {
 
         MenuBar mbMain;
         MenuItem miOpen, miLoad, miExit;
@@ -173,29 +133,58 @@ public final class Viewer extends WindowAdapter
     }
 
     private void init() {
-        if (this.initState.compareAndSet(false, true)) {
+        if (!this.initialized) {
             this.frame.setTitle(TITLE);
             this.frame.addWindowListener(this);
-            this.frame.setMenuBar(this.buildMenuBar());
+            this.frame.setMenuBar(this.createMenuBar());
+            this.frame.add(this.viewerComponent, BorderLayout.CENTER);
+            this.frame.add(this.statusComponent, BorderLayout.SOUTH);
             this.frame.setBounds(20, 20, 480, 320);
+            this.initialized = true;
+        }
+    }
+
+    /*
+     * Package Accessible Methods
+     */
+
+    Frame getFrame() {
+        return this.frame;
+    }
+
+    void setStatusMessage(final String statusMessage) {
+        if (this.isRunning.get()) {
+            this.statusComponent.setText(statusMessage);
+        }
+    }
+
+    void setImage(final Image image) {
+        if (this.isRunning.get()) {
+            this.viewerComponent.setImage(image);
+        }
+    }
+
+    void setImage(final ImageProducer image) {
+        if (this.isRunning.get()) {
+            this.viewerComponent.setImage(image);
+        }
+    }
+
+    /*
+     * Public Methods
+     */
+
+    /* Runnable Interface */
+
+    @Override
+    public void run() {
+        if (this.isRunning.compareAndSet(false, true)) {
+            this.init();
             this.frame.setVisible(true);
         }
     }
 
-    /*
-     * Runnable Interface
-     */
-
-    @Override
-    public void run() {
-        if (EventQueue.isDispatchThread()) {
-            this.init();
-        }
-    }
-
-    /*
-     * Action Listener Interface
-     */
+    /* Action Listener Interface */
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -205,22 +194,18 @@ public final class Viewer extends WindowAdapter
         } else if (action.equals("load-class")) {
             this.showClassDialog();
         } else if (action.equals("exit")) {
-            this.exit();
+            this.stop();
         }
     }
 
-    /*
-     * Window Adapter Methods
-     */
+    /* Window Adapter Methods */
 
     @Override
     public void windowClosing(WindowEvent e) {
-        this.exit();
+        this.stop();
     }
 
-    /*
-     * Public Static Methods
-     */
+    /* Entry Point */
 
     public static void main(String[] args) {
         Viewer viewer = new Viewer();
