@@ -2,13 +2,15 @@ package com.duckwriter.lessons.viewer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.awt.Shape;
-import java.awt.Image;
-import java.awt.ImageProducer;
+import java.awt.image.ImageProducer;
 
 final class ClassImageLoader extends Object
     implements Runnable {
 
     private static final String REQUEST_MESSAGE = "Please inform a class name...";
+    private static final String LOADING_MESSAGE = "Loading...";
+    private static final String ERROR_MESSAGE = "!!! Error loading informed class name...";
+    private static final String UNSUPPORTED_ERROR = "!!! Class not supported...";
     private static final String EMPTY_MESSAGE = "";
 
     private final AtomicBoolean isRunning;
@@ -20,18 +22,22 @@ final class ClassImageLoader extends Object
         this.viewer = viewer;
     }
 
-    private Object createInstance(Class<?> cls) {
-
+    private Object createObject(Class<?> cls) {
+        Object obj = null;
+        try {
+            obj = cls.newInstance();
+        } catch (ReflectiveOperationException e) {
+            System.err.println("Error while creating class instance...");
+        }
+        return obj;
     }
 
-    private Class<?> loadClass() {
+    private Class<?> getClassFromDialog() {
 
         ClassDialog dialog = this.classDialog;
 
         if (dialog == null) {
-            dialog = new ClassDialog(this.frame);
-            dialog.addExpectedClass(Shape.class);
-            dialog.addExpectedClass(ImageProducer.class);
+            dialog = new ClassDialog(this.viewer.getFrame());
             this.classDialog = dialog;
         }
 
@@ -45,22 +51,33 @@ final class ClassImageLoader extends Object
     @Override
     public void run() {
 
-        Object inst;
-        Class<?> cls;
-
         if (this.isRunning.compareAndSet(false, true)) {
-            ViewerEvent.dispatch(this.viewer, REQUEST_MESSAGE);
-            cls = this.loadClass();
-            if (cls != null) {
-                inst = this.createInstance(cls);
-                if (inst instanceof Image) {
 
-                } else if (inst instanceof ImageProducer) {
+            final ViewerUpdater updater = new ViewerUpdater(this.viewer);
+            Object obj;
+            Class<?> cls;
 
+            updater.updateStatusMessage(REQUEST_MESSAGE);
+            cls = this.getClassFromDialog();
+
+            if (cls == null) {
+                updater.updateStatusMessage(EMPTY_MESSAGE);
+            } else {
+                updater.updateStatusMessage(LOADING_MESSAGE);
+                obj = this.createObject(cls);
+                if (obj == null) {
+                    updater.updateStatusMessage(ERROR_MESSAGE);
+                } else if (obj instanceof Shape) {
+                    updater.updateShape((Shape)obj, EMPTY_MESSAGE);
+                } else if (obj instanceof ImageProducer) {
+                    updater.updateImageProducer((ImageProducer)obj, EMPTY_MESSAGE);
+                } else {
+                    updater.updateStatusMessage(UNSUPPORTED_ERROR);
                 }
             }
-            ViewerEvent.dispatch(this.viewer, EMPTY_MESSAGE);
+
             this.isRunning.set(false);
+
         }
 
     }

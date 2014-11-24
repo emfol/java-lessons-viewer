@@ -3,10 +3,12 @@ package com.duckwriter.lessons.viewer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.awt.EventQueue;
 import java.awt.Frame;
+import java.awt.Shape;
 import java.awt.Image;
 import java.awt.Menu;
 import java.awt.MenuItem;
 import java.awt.MenuBar;
+import java.awt.BorderLayout;
 import java.awt.image.ImageProducer;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -164,9 +166,15 @@ public final class Viewer extends WindowAdapter
         }
     }
 
-    void setImage(final ImageProducer image) {
+    void setImage(final ImageProducer producer) {
         if (this.isRunning.get()) {
-            this.viewerComponent.setImage(image);
+            this.viewerComponent.setImage(producer);
+        }
+    }
+
+    void setShape(final Shape shape) {
+        if (this.isRunning.get()) {
+            this.viewerComponent.setShape(shape);
         }
     }
 

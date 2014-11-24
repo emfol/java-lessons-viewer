@@ -2,8 +2,10 @@ package com.duckwriter.lessons.viewer;
 
 import java.awt.Component;
 import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.Image;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.image.ImageProducer;
 
 /**
@@ -15,6 +17,7 @@ public class ViewerComponent extends Component {
     private static final long serialVersionUID = 1L;
 
     private Image image;
+    private Shape shape;
     private final Rectangle viewRect;
 
     public ViewerComponent() {
@@ -66,6 +69,7 @@ public class ViewerComponent extends Component {
 
     public void setImage(Image image) {
         this.image = image;
+        this.shape = null;
         this.repaint();
     }
 
@@ -73,12 +77,21 @@ public class ViewerComponent extends Component {
         this.setImage(this.createImage(producer));
     }
 
+    public void setShape(Shape shape) {
+        this.image = null;
+        this.shape = shape;
+        this.repaint();
+    }
+
     @Override
     public void paint(Graphics g) {
-        Image im = this.image;
-        Rectangle vw = this.getViewRect();
-        if (im != null) {
-            vw = this.getViewRect();
+
+        Graphics2D g2d = (Graphics2D)g;
+
+        if (this.image != null) {
+            g2d.drawImage(this.image, 0, 0, this);
+        } else if (this.shape != null) {
+            g2d.draw(this.shape);
         }
     }
 

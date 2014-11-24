@@ -14,13 +14,15 @@ final class FileImageLoader extends Object
     implements Runnable, FilenameFilter {
 
     private static final String REQUEST_MESSAGE;
-    private static final String STATUS_MESSAGE;
+    private static final String LOADING_MESSAGE;
+    private static final String ERROR_MESSAGE;
     private static final String EMPTY_MESSAGE;
     private static final Pattern FILENAME_REGEX;
 
     static {
         REQUEST_MESSAGE = "Please select an image file...";
-        STATUS_MESSAGE = "Loading selected image...";
+        LOADING_MESSAGE = "Loading...";
+        ERROR_MESSAGE = "!!! Error loading selected file...";
         EMPTY_MESSAGE = "";
         FILENAME_REGEX = Pattern.compile(
             "\\.(?:jpe?g|png|gif|bmp)$",
@@ -109,18 +111,28 @@ final class FileImageLoader extends Object
     @Override
     public void run() {
 
-        File file;
-        Image image = null;
-
         if (this.isRunning.compareAndSet(false, true)) {
-            ViewerEvent.dispatch(this.viewer, REQUEST_MESSAGE);
+
+            final ViewerUpdater updater = new ViewerUpdater(this.viewer);
+            File file;
+            Image image;
+
+            updater.updateStatusMessage(REQUEST_MESSAGE);
             file = this.getFile();
-            if (file != null) {
-                ViewerEvent.dispatch(this.viewer, STATUS_MESSAGE);
+
+            if (file == null) {
+                updater.updateStatusMessage(EMPTY_MESSAGE);
+            } else {
+                updater.updateStatusMessage(LOADING_MESSAGE);
                 image = this.load(file);
+                updater.updateImage(
+                    image,
+                    image != null ? EMPTY_MESSAGE: ERROR_MESSAGE
+                );
             }
-            ViewerEvent.dispatch(this.viewer, EMPTY_MESSAGE, image);
+
             this.isRunning.set(false);
+
         }
 
     }
