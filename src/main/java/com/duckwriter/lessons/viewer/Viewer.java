@@ -1,5 +1,7 @@
 package com.duckwriter.lessons.viewer;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.awt.EventQueue;
 import java.awt.Frame;
@@ -8,12 +10,15 @@ import java.awt.Image;
 import java.awt.Menu;
 import java.awt.MenuItem;
 import java.awt.MenuBar;
+import java.awt.Label;
 import java.awt.BorderLayout;
 import java.awt.image.ImageProducer;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
+
+import com.duckwriter.util.dispatch.DispatchQueue;
 
 public final class Viewer extends WindowAdapter
     implements Runnable, ActionListener {
@@ -22,21 +27,24 @@ public final class Viewer extends WindowAdapter
      * Constants
      */
 
-    private static final String CACHE_KEY_FILEDIALOG = "fileDialog";
-    private static final String CACHE_KEY_CLASSDIALOG = "classDialog";
-    private static final String CACHE_KEY_DIRECTORY = "directory";
-    private static final String TITLE = "Viewer - Images and Shapes";
+    private static final String TITLE = "Viewer - Images and Drawable Classes";
+    private static final String CACHE_DISPATCHQUEUE = "dispatchQueue";
+    private static final String CACHE_CLASSLOADER = "classLoader";
+    private static final String CACHE_FILELOADER = "fileLoader";
+    private static final String COMMAND_LOADFILE = "load-file";
+    private static final String COMMAND_LOADCLASS = "load-class";
+    private static final String COMMAND_EXIT = "exit";
 
     /*
      * Private Fields
      */
 
     private final AtomicBoolean isRunning;
+    private final Map<String, Object> cache;
     private final Frame frame;
     private final ViewerComponent viewerComponent;
     private final Label statusComponent;
     private boolean initialized;
-
 
     /*
      * Constructors
@@ -48,6 +56,7 @@ public final class Viewer extends WindowAdapter
         this.frame = new Frame();
         this.viewerComponent = new ViewerComponent();
         this.statusComponent = new Label();
+        this.cache = new HashMap<String, Object>();
         this.initialized = false;
     }
 
@@ -61,44 +70,6 @@ public final class Viewer extends WindowAdapter
         }
     }
 
-    private void showClassDialog() {
-
-        ClassDialog classDialog;
-        Class<?> selCls;
-
-        classDialog = (ClassDialog)this.cache.get(CACHE_KEY_CLASSDIALOG);
-        if (classDialog == null) {
-            classDialog = new ClassDialog(this.frame);
-            classDialog.addExpectedClass(Shape.class);
-            classDialog.addExpectedClass(ImageProducer.class);
-            this.cache.put(CACHE_KEY_CLASSDIALOG, classDialog);
-        }
-        classDialog.setVisible(true);
-        selCls = classDialog.getSelectedClass();
-        if (selCls != null) {
-            this.selectedClass = selCls;
-            this.selectedFile = null;
-            this.refresh();
-        }
-
-    }
-
-    private void refresh() {
-        // TODO: load file or class
-        System.out.format(
-            "Currently Selected File: %s\n",
-            this.selectedFile != null
-                ? this.selectedFile.getPath()
-                : "None..."
-        );
-        System.out.format(
-            "Currently Selected Class: %s\n",
-            this.selectedClass != null
-                ? this.selectedClass
-                : "None..."
-        );
-    }
-
     private MenuBar createMenuBar() {
 
         MenuBar mbMain;
@@ -107,16 +78,16 @@ public final class Viewer extends WindowAdapter
 
         // build menu items
         miOpen = new MenuItem();
-        miOpen.setLabel("Open Image...");
-        miOpen.setActionCommand("open-image-file");
+        miOpen.setLabel("Load Image...");
+        miOpen.setActionCommand(COMMAND_LOADFILE);
         miOpen.addActionListener(this);
         miLoad = new MenuItem();
         miLoad.setLabel("Load Class...");
-        miLoad.setActionCommand("load-class");
+        miLoad.setActionCommand(COMMAND_LOADCLASS);
         miLoad.addActionListener(this);
         miExit = new MenuItem();
         miExit.setLabel("Exit");
-        miExit.setActionCommand("exit");
+        miExit.setActionCommand(COMMAND_EXIT);
         miExit.addActionListener(this);
 
         // build menu
@@ -143,6 +114,37 @@ public final class Viewer extends WindowAdapter
             this.frame.add(this.statusComponent, BorderLayout.SOUTH);
             this.frame.setBounds(20, 20, 480, 320);
             this.initialized = true;
+        }
+    }
+
+    private DispatchQueue getDispatchQueue() {
+        DispatchQueue dispatchQueue = (DispatchQueue)this.cache.get(CACHE_DISPATCHQUEUE);
+        if (dispatchQueue == null) {
+            dispatchQueue = DispatchQueue.createDispatchQueue();
+            this.cache.put(CACHE_DISPATCHQUEUE, dispatchQueue);
+        }
+        return dispatchQueue;
+    }
+
+    public void showFileDialog() {
+        if (this.isRunning.get()) {
+            FileImageLoader fileLoader = (FileImageLoader)this.cache.get(CACHE_FILELOADER);
+            if (fileLoader == null) {
+                fileLoader = new FileImageLoader(this);
+                this.cache.put(CACHE_FILELOADER, fileLoader);
+            }
+            (this.getDispatchQueue()).dispatch(fileLoader);
+        }
+    }
+
+    public void showClassDialog() {
+        if (this.isRunning.get()) {
+            ClassImageLoader classLoader = (ClassImageLoader)this.cache.get(CACHE_CLASSLOADER);
+            if (classLoader == null) {
+                classLoader = new ClassImageLoader(this);
+                this.cache.put(CACHE_CLASSLOADER, classLoader);
+            }
+            (this.getDispatchQueue()).dispatch(classLoader);
         }
     }
 
@@ -197,11 +199,11 @@ public final class Viewer extends WindowAdapter
     @Override
     public void actionPerformed(ActionEvent e) {
         String action = e.getActionCommand();
-        if (action.equals("open-image-file")) {
+        if (action.equals(COMMAND_LOADFILE)) {
             this.showFileDialog();
-        } else if (action.equals("load-class")) {
+        } else if (action.equals(COMMAND_LOADCLASS)) {
             this.showClassDialog();
-        } else if (action.equals("exit")) {
+        } else if (action.equals(COMMAND_EXIT)) {
             this.stop();
         }
     }

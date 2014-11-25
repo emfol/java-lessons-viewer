@@ -1,6 +1,7 @@
 package com.duckwriter.lessons.viewer;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Image;
@@ -16,14 +17,26 @@ public class ViewerComponent extends Component {
 
     private static final long serialVersionUID = 1L;
 
+    private static final int MIN_SIZE = 1;
+
     private Image image;
     private Shape shape;
+    private final Dimension viewBounds;
     private final Rectangle viewRect;
+
+    /*
+     * Constructors
+     */
 
     public ViewerComponent() {
         super();
+        this.viewBounds = new Dimension();
         this.viewRect = new Rectangle();
     }
+
+    /*
+     * Private Methods
+     */
 
     public static void adjustViewRect(Rectangle viewRect, int imageWidth, int imageHeight) {
 
@@ -67,6 +80,18 @@ public class ViewerComponent extends Component {
         return result;
     }
 
+    private void drawImage(Graphics2D g) {
+
+    }
+
+    private void drawShape(Graphics2D g) {
+
+    }
+
+    /*
+     * Public Methods
+     */
+
     public void setImage(Image image) {
         this.image = image;
         this.shape = null;
@@ -86,13 +111,16 @@ public class ViewerComponent extends Component {
     @Override
     public void paint(Graphics g) {
 
-        Graphics2D g2d = (Graphics2D)g;
-
-        if (this.image != null) {
-            g2d.drawImage(this.image, 0, 0, this);
-        } else if (this.shape != null) {
-            g2d.draw(this.shape);
+        this.viewBounds.setSize(this.getWidth(), this.getHeight());
+        if (this.viewBounds.width > MIN_SIZE
+            && this.viewBounds.height > MIN_SIZE) {
+            if (this.image != null) {
+                this.drawImage((Graphics2D)g);
+            } else if (this.shape != null) {
+                this.drawShape((Graphics2D)g);
+            }
         }
+
     }
 
 }
