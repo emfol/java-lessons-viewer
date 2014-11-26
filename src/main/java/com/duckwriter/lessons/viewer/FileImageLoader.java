@@ -8,6 +8,7 @@ import java.util.regex.Matcher;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.awt.Image;
 import java.awt.FileDialog;
+import java.awt.Toolkit;
 import javax.imageio.ImageIO;
 
 final class FileImageLoader extends Object
@@ -59,10 +60,18 @@ final class FileImageLoader extends Object
 
     private Image load(File file) {
         Image image = null;
-        try {
-            image = ImageIO.read(file);
-        } catch (IOException e) {
-            System.err.println("Error loading image...");
+        final String path = file.getAbsolutePath();
+        if (path.toLowerCase().endsWith(".bmp")) {
+            // use ImageIO
+            try {
+                image = ImageIO.read(file);
+            } catch (IOException e) {
+                System.err.println("Error loading image...");
+            }
+        } else {
+            // use Toolkit
+            Toolkit toolkit = Toolkit.getDefaultToolkit();
+            image = toolkit.createImage(path);
         }
         return image;
     }

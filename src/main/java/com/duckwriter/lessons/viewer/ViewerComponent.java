@@ -38,7 +38,7 @@ public class ViewerComponent extends Component {
      * Private Methods
      */
 
-    public void adjustViewRect() {
+    private void adjustViewRect() {
 
         float k, vw, vh, iw, ih;
 
@@ -120,6 +120,17 @@ public class ViewerComponent extends Component {
                 this.drawShape((Graphics2D)g);
             }
         }
+
+    }
+
+    @Override
+    public boolean imageUpdate(Image source, int flags, int x, int y, int w, int h) {
+
+        final boolean needsUpdate = source == this.image
+            ? super.imageUpdate(source, flags, x, y, w, h)
+            : false;
+
+        return needsUpdate;
 
     }
 
