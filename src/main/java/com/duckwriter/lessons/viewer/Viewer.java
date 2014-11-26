@@ -66,7 +66,14 @@ public final class Viewer extends WindowAdapter
 
     private void stop() {
         if (this.isRunning.compareAndSet(true, false)) {
+            DispatchQueue queue = (DispatchQueue)this.cache.get(CACHE_DISPATCHQUEUE);
+            if (queue != null) {
+                // kill dispatch thread
+                queue.stop();
+            }
             this.frame.setVisible(false);
+            this.cache.clear();
+            System.exit(0);
         }
     }
 

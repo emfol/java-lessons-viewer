@@ -38,49 +38,49 @@ public class ViewerComponent extends Component {
      * Private Methods
      */
 
-    public static void adjustViewRect(Rectangle viewRect, int imageWidth, int imageHeight) {
+    public void adjustViewRect() {
 
         float k, vw, vh, iw, ih;
 
-        vw = (float)viewRect.width;
-        vh = (float)viewRect.height;
-        iw = (float)imageWidth;
-        ih = (float)imageHeight;
+        vw = (float)this.viewBounds.width;
+        vh = (float)this.viewBounds.height;
+        iw = (float)this.viewRect.width;
+        ih = (float)this.viewRect.height;
 
-        // calculate scale factor
-        k = (ih / iw < vh / vw) ? vw / iw : vh / ih;
+        // calculate k (scale factor)
+        k = (ih / iw) < (vh / vw)
+            ? vw / iw
+            : vh / ih;
 
         // scale image
         if (k < 1.0f) {
-            imageWidth = (int)(k * iw);
-            imageHeight = (int)(k * ih);
+            this.viewRect.width = (int)(k * iw);
+            this.viewRect.height = (int)(k * ih);
         }
-        // update rectangle
-        viewRect.x = (viewRect.width - imageWidth) / 2;
-        viewRect.y = (viewRect.height - imageHeight) / 2;
-        viewRect.width = imageWidth;
-        viewRect.height = imageHeight;
 
-    }
+        // update rect offset
+        this.viewRect.x = (this.viewBounds.width - this.viewRect.width) / 2;
+        this.viewRect.y = (this.viewBounds.height - this.viewRect.height) / 2;
 
-    private Rectangle getViewRect() {
-        Rectangle result = null;
-        int viewWidth, viewHeight, imageWidth, imageHeight;
-        if (this.image != null
-            && (imageWidth = this.image.getWidth(this)) > 0
-            && (imageHeight = this.image.getHeight(this)) > 0
-            && (viewWidth = this.getWidth()) > 0
-            && (viewHeight = this.getHeight()) > 0
-        ) {
-            this.viewRect.width = viewWidth;
-            this.viewRect.height = viewHeight;
-            adjustViewRect(this.viewRect, imageWidth, imageHeight);
-            result = this.viewRect;
-        }
-        return result;
     }
 
     private void drawImage(Graphics2D g) {
+
+        int origWidth, origHeight;
+
+        if ((origWidth = this.image.getWidth(this)) > 0
+            && (origHeight = this.image.getHeight(this)) > 0) {
+            this.viewRect.setSize(origWidth, origHeight);
+            this.adjustViewRect();
+            g.drawImage(
+                this.image,
+                this.viewRect.x,
+                this.viewRect.y,
+                this.viewRect.width,
+                this.viewRect.height,
+                this
+            );
+        }
 
     }
 

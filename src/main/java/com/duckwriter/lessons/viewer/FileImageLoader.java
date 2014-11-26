@@ -25,7 +25,7 @@ final class FileImageLoader extends Object
         ERROR_MESSAGE = "!!! Error loading selected file...";
         EMPTY_MESSAGE = "";
         FILENAME_REGEX = Pattern.compile(
-            "\\.(?:jpe?g|png|gif|bmp)$",
+            ".+\\.(?:jpe?g|png|gif|bmp)$",
             Pattern.CASE_INSENSITIVE
         );
     }

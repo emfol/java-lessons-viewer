@@ -26,8 +26,10 @@ final class ClassImageLoader extends Object
         Object obj = null;
         try {
             obj = cls.newInstance();
-        } catch (ReflectiveOperationException e) {
-            System.err.println("Error while creating class instance...");
+        } catch (InstantiationException e) {
+            System.err.println("Instantiation error while creating class instance...");
+        } catch (IllegalAccessException e) {
+            System.err.println("Access error while creating class instance...");
         }
         return obj;
     }
