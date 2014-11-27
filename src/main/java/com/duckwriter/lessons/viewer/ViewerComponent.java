@@ -98,10 +98,6 @@ public class ViewerComponent extends Component {
         this.repaint();
     }
 
-    public void setImage(ImageProducer producer) {
-        this.setImage(this.createImage(producer));
-    }
-
     public void setShape(Shape shape) {
         this.image = null;
         this.shape = shape;

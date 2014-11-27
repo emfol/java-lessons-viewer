@@ -175,12 +175,6 @@ public final class Viewer extends WindowAdapter
         }
     }
 
-    void setImage(final ImageProducer producer) {
-        if (this.isRunning.get()) {
-            this.viewerComponent.setImage(producer);
-        }
-    }
-
     void setShape(final Shape shape) {
         if (this.isRunning.get()) {
             this.viewerComponent.setShape(shape);

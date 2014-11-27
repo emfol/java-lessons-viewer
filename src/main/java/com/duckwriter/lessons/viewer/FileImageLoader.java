@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.awt.Image;
 import java.awt.FileDialog;
 import java.awt.Toolkit;
-import javax.imageio.ImageIO;
 
 final class FileImageLoader extends Object
     implements Runnable, FilenameFilter {
@@ -26,7 +25,7 @@ final class FileImageLoader extends Object
         ERROR_MESSAGE = "!!! Error loading selected file...";
         EMPTY_MESSAGE = "";
         FILENAME_REGEX = Pattern.compile(
-            ".+\\.(?:jpe?g|png|gif|bmp)$",
+            ".+\\.(?:jpe?g|png|gif)$",
             Pattern.CASE_INSENSITIVE
         );
     }
@@ -59,21 +58,8 @@ final class FileImageLoader extends Object
      */
 
     private Image load(File file) {
-        Image image = null;
-        final String path = file.getAbsolutePath();
-        if (path.toLowerCase().endsWith(".bmp")) {
-            // use ImageIO
-            try {
-                image = ImageIO.read(file);
-            } catch (IOException e) {
-                System.err.println("Error loading image...");
-            }
-        } else {
-            // use Toolkit
-            Toolkit toolkit = Toolkit.getDefaultToolkit();
-            image = toolkit.createImage(path);
-        }
-        return image;
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        return toolkit.createImage(file.getAbsolutePath());
     }
 
     private File getFile() {

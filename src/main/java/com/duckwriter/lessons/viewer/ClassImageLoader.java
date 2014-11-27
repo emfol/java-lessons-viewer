@@ -1,7 +1,9 @@
 package com.duckwriter.lessons.viewer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.awt.Toolkit;
 import java.awt.Shape;
+import java.awt.Image;
 import java.awt.image.ImageProducer;
 
 final class ClassImageLoader extends Object
@@ -24,8 +26,16 @@ final class ClassImageLoader extends Object
 
     private Object createObject(Class<?> cls) {
         Object obj = null;
+        Toolkit toolkit;
+        Image image;
         try {
             obj = cls.newInstance();
+            if (obj instanceof ImageProducer) {
+                // create image from image producer
+                toolkit = Toolkit.getDefaultToolkit();
+                image = toolkit.createImage((ImageProducer)obj);
+                obj = image;
+            }
         } catch (InstantiationException e) {
             System.err.println("Instantiation error while creating class instance...");
         } catch (IllegalAccessException e) {
@@ -69,10 +79,10 @@ final class ClassImageLoader extends Object
                 obj = this.createObject(cls);
                 if (obj == null) {
                     updater.updateStatusMessage(ERROR_MESSAGE);
+                } else if (obj instanceof Image) {
+                    updater.updateImage((Image)obj, EMPTY_MESSAGE);
                 } else if (obj instanceof Shape) {
                     updater.updateShape((Shape)obj, EMPTY_MESSAGE);
-                } else if (obj instanceof ImageProducer) {
-                    updater.updateImageProducer((ImageProducer)obj, EMPTY_MESSAGE);
                 } else {
                     updater.updateStatusMessage(UNSUPPORTED_ERROR);
                 }
