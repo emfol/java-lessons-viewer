@@ -12,7 +12,6 @@ import java.awt.MenuItem;
 import java.awt.MenuBar;
 import java.awt.Label;
 import java.awt.BorderLayout;
-import java.awt.image.ImageProducer;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
