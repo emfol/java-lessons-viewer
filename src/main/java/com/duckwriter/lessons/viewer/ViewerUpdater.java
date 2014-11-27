@@ -6,10 +6,10 @@ import java.awt.Image;
 
 final class ViewerUpdater extends Object implements Runnable {
 
-    static final int MODE_NONE     = 0x00;
-    static final int MODE_MESSAGE  = 0x01;
-    static final int MODE_IMAGE    = 0x02;
-    static final int MODE_SHAPE    = 0x04;
+    static final int MODE_NONE    = 0x00;
+    static final int MODE_MESSAGE = 0x01;
+    static final int MODE_IMAGE   = 0x02;
+    static final int MODE_SHAPE   = 0x04;
 
     private final Viewer viewer;
     private final String message;
