@@ -1,5 +1,6 @@
 package com.duckwriter.lessons.viewer;
 
+import java.util.concurrent.atomic.AtomicReference;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -25,11 +26,11 @@ public class ViewerComponent extends Component {
 
     private static final int MIN_SIZE = 1;
 
-    private Image image;
-    private Shape shape;
-    private int shapeMode;
+    private final AtomicReference<Image> imageRef;
+    private final AtomicReference<Shape> shapeRef;
     private final Dimension viewBounds;
     private final Rectangle viewRect;
+    private volatile int shapeMode;
 
     /*
      * Constructors
@@ -37,9 +38,11 @@ public class ViewerComponent extends Component {
 
     public ViewerComponent() {
         super();
-        this.shapeMode = SHAPE_MODE_CENTRALIZED;
+        this.imageRef = new AtomicReference<Image>();
+        this.shapeRef = new AtomicReference<Shape>();
         this.viewBounds = new Dimension();
         this.viewRect = new Rectangle();
+        this.shapeMode = SHAPE_MODE_CENTRALIZED;
     }
 
     /*
@@ -72,16 +75,16 @@ public class ViewerComponent extends Component {
 
     }
 
-    private void drawImage(Graphics2D g) {
+    private void drawImage(final Graphics2D g, final Image image) {
 
         int origWidth, origHeight;
 
-        if ((origWidth = this.image.getWidth(this)) > 0
-            && (origHeight = this.image.getHeight(this)) > 0) {
+        if ((origWidth = image.getWidth(this)) > 0
+            && (origHeight = image.getHeight(this)) > 0) {
             this.viewRect.setSize(origWidth, origHeight);
             this.adjustViewRect();
             g.drawImage(
-                this.image,
+                image,
                 this.viewRect.x,
                 this.viewRect.y,
                 this.viewRect.width,
@@ -92,9 +95,9 @@ public class ViewerComponent extends Component {
 
     }
 
-    private void drawShapeStretched(Graphics2D g) {
+    private void drawShapeStretched(final Graphics2D g, final Shape oSh) {
 
-        Shape tSh, oSh = this.shape;
+        Shape tSh;
         Rectangle2D shapeBounds = oSh.getBounds2D();
         AffineTransform matrix = new AffineTransform();
         double origWidth, origHeight, frameWidth, frameHeight;
@@ -119,9 +122,9 @@ public class ViewerComponent extends Component {
 
     }
 
-    private void drawShapeCentralized(Graphics2D g) {
+    private void drawShapeCentralized(final Graphics2D g, final Shape oSh) {
 
-        Shape tSh, oSh = this.shape;
+        Shape tSh;
         Rectangle2D shapeBounds = oSh.getBounds2D();
         AffineTransform matrix = new AffineTransform();
         double scale, origWidth, origHeight,
@@ -152,7 +155,7 @@ public class ViewerComponent extends Component {
 
     }
 
-    private void drawShape(Graphics2D g) {
+    private void drawShape(final Graphics2D g, final Shape shape) {
 
         final int mode = this.shapeMode;
 
@@ -161,10 +164,10 @@ public class ViewerComponent extends Component {
 
         switch (mode) {
             case SHAPE_MODE_CENTRALIZED:
-                this.drawShapeCentralized(g);
+                this.drawShapeCentralized(g, shape);
                 break;
             case SHAPE_MODE_STRETCHED:
-                this.drawShapeStretched(g);
+                this.drawShapeStretched(g, shape);
                 break;
         }
 
@@ -174,15 +177,15 @@ public class ViewerComponent extends Component {
      * Public Methods
      */
 
-    public void setImage(Image image) {
-        this.image = image;
-        this.shape = null;
+    public void setImage(final Image image) {
+        this.imageRef.set(image);
+        this.shapeRef.set(null);
         this.repaint();
     }
 
-    public void setShape(Shape shape) {
-        this.image = null;
-        this.shape = shape;
+    public void setShape(final Shape shape) {
+        this.imageRef.set(null);
+        this.shapeRef.set(shape);
         this.repaint();
     }
 
@@ -193,6 +196,8 @@ public class ViewerComponent extends Component {
     @Override
     public void paint(Graphics g) {
 
+        Image image;
+        Shape shape;
         Graphics2D g2;
 
         this.viewBounds.setSize(this.getWidth(), this.getHeight());
@@ -201,10 +206,10 @@ public class ViewerComponent extends Component {
             g2 = (Graphics2D)g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            if (this.image != null) {
-                this.drawImage(g2);
-            } else if (this.shape != null) {
-                this.drawShape(g2);
+            if ((image = this.imageRef.get()) != null) {
+                this.drawImage(g2, image);
+            } else if ((shape = this.shapeRef.get()) != null) {
+                this.drawShape(g2, shape);
             }
         }
 
@@ -213,7 +218,8 @@ public class ViewerComponent extends Component {
     @Override
     public boolean imageUpdate(Image source, int flags, int x, int y, int w, int h) {
 
-        final boolean needsUpdate = (source == this.image)
+        final Image image = this.imageRef.get();
+        final boolean needsUpdate = (source == image)
             ? super.imageUpdate(source, flags, x, y, w, h)
             : false;
 
