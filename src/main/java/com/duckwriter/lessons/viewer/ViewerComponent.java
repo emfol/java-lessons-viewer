@@ -25,6 +25,12 @@ public class ViewerComponent extends Component {
     public static final int SHAPE_MODE_STRETCHED = 1;
 
     private static final int MIN_SIZE = 1;
+    private static final Color FG_COLOR;
+
+    static {
+        // a light blue...
+        FG_COLOR = new Color(0x004285f4);
+    }
 
     private final AtomicReference<Image> imageRef;
     private final AtomicReference<Shape> shapeRef;
@@ -160,7 +166,7 @@ public class ViewerComponent extends Component {
         final int mode = this.shapeMode;
 
         // set color
-        g.setColor(new Color(0x004285f4));
+        g.setColor(FG_COLOR);
 
         switch (mode) {
             case SHAPE_MODE_CENTRALIZED:
