@@ -9,15 +9,21 @@ import java.awt.Image;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Color;
+import java.awt.SystemColor;
 import java.awt.RenderingHints;
+import java.awt.CheckboxMenuItem;
+import java.awt.PopupMenu;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
-/**
- *
- * @author Emanuel
- */
-public class ViewerComponent extends Component {
+public class ViewerComponent extends Component
+    implements MouseListener, ItemListener {
+
+    /* Class Members */
 
     private static final long serialVersionUID = 1L;
 
@@ -25,18 +31,20 @@ public class ViewerComponent extends Component {
     public static final int SHAPE_MODE_STRETCHED = 1;
 
     private static final int MIN_SIZE = 1;
-    private static final Color FG_COLOR;
+    private static final Color FG_COLOR = new Color(0x004285f4);
+    private static final String ITEM_LABEL_CENTRALIZED = "Centralized Mode";
+    private static final String ITEM_LABEL_STRETCHED = "Stretched Mode";
 
-    static {
-        // a light blue...
-        FG_COLOR = new Color(0x004285f4);
-    }
+    /* Instance Members */
 
     private final AtomicReference<Image> imageRef;
     private final AtomicReference<Shape> shapeRef;
     private final Dimension viewBounds;
     private final Rectangle viewRect;
+    private PopupMenu popupMenu;
     private volatile int shapeMode;
+    private volatile boolean popupTriggered;
+    private volatile boolean initialized;
 
     /*
      * Constructors
@@ -48,12 +56,53 @@ public class ViewerComponent extends Component {
         this.shapeRef = new AtomicReference<Shape>();
         this.viewBounds = new Dimension();
         this.viewRect = new Rectangle();
+        this.popupMenu = null;
         this.shapeMode = SHAPE_MODE_CENTRALIZED;
+        this.popupTriggered = false;
+        this.initialized = false;
+        // settings
+        this.setBackground(SystemColor.window);
     }
 
     /*
      * Private Methods
      */
+
+    private PopupMenu getPopupMenu() {
+
+        final int mode = this.shapeMode;
+        PopupMenu menu = this.popupMenu;
+        CheckboxMenuItem menuItem;
+
+        if (menu == null) {
+
+            // initialize popup menu
+            menu = new PopupMenu();
+
+            menuItem = new CheckboxMenuItem(
+                ITEM_LABEL_CENTRALIZED,
+                mode == SHAPE_MODE_CENTRALIZED
+            );
+            menuItem.addItemListener(this);
+            menu.add(menuItem);
+            menuItem = new CheckboxMenuItem(
+                ITEM_LABEL_STRETCHED,
+                mode == SHAPE_MODE_STRETCHED
+            );
+            menuItem.addItemListener(this);
+            menu.add(menuItem);
+
+            // add?
+            this.add(menu);
+
+            // save reference
+            this.popupMenu = menu;
+
+        }
+
+        return menu;
+
+    }
 
     private void adjustViewRect() {
 
@@ -206,6 +255,12 @@ public class ViewerComponent extends Component {
         Shape shape;
         Graphics2D g2;
 
+        // temporary... where should I put this?
+        if (!this.initialized) {
+            this.addMouseListener(this);
+            this.initialized = true;
+        }
+
         this.viewBounds.setSize(this.getWidth(), this.getHeight());
         if (this.viewBounds.width > MIN_SIZE
             && this.viewBounds.height > MIN_SIZE) {
@@ -231,6 +286,41 @@ public class ViewerComponent extends Component {
 
         return needsUpdate;
 
+    }
+
+    /* MouseListener Interface */
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        // nothing...
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        // nothing...
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        this.popupTriggered = e.isPopupTrigger();
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (this.popupTriggered || e.isPopupTrigger()) {
+            (this.getPopupMenu()).show(this, e.getX(), e.getY());
+            this.popupTriggered = false;
+        }
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        // nothing...
+    }
+
+    @Override
+    public void itemStateChanged(ItemEvent e) {
+        // TODO...
     }
 
 }
