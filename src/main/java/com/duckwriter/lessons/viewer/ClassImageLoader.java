@@ -9,10 +9,10 @@ import java.awt.image.ImageProducer;
 final class ClassImageLoader extends Object
     implements Runnable {
 
-    private static final String REQUEST_MESSAGE = "Please inform a class name...";
+    private static final String REQUEST_MESSAGE = "Please enter a class name...";
     private static final String LOADING_MESSAGE = "Loading...";
-    private static final String ERROR_MESSAGE = "!!! Error loading informed class name...";
-    private static final String UNSUPPORTED_ERROR = "!!! Class not supported...";
+    private static final String ERROR_MESSAGE = "Error loading informed class name...";
+    private static final String UNSUPPORTED_ERROR = "Class not supported...";
     private static final String EMPTY_MESSAGE = "";
 
     private final AtomicBoolean isRunning;

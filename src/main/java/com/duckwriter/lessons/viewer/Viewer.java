@@ -9,6 +9,7 @@ import java.awt.Shape;
 import java.awt.Image;
 import java.awt.Menu;
 import java.awt.MenuItem;
+import java.awt.CheckboxMenuItem;
 import java.awt.MenuBar;
 import java.awt.Label;
 import java.awt.BorderLayout;
@@ -16,11 +17,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 import com.duckwriter.util.dispatch.DispatchQueue;
 
 public final class Viewer extends WindowAdapter
-    implements Runnable, ActionListener {
+    implements Runnable, ActionListener, ItemListener {
 
     /*
      * Constants
@@ -80,32 +83,36 @@ public final class Viewer extends WindowAdapter
 
         MenuBar mbMain;
         MenuItem miOpen, miLoad, miExit;
-        Menu mFile;
+        CheckboxMenuItem miChkAspect;
+        Menu mFile, mView;
 
         // build menu items
-        miOpen = new MenuItem();
-        miOpen.setLabel("Load Image...");
+        miOpen = new MenuItem("Load Image...");
         miOpen.setActionCommand(COMMAND_LOADFILE);
         miOpen.addActionListener(this);
-        miLoad = new MenuItem();
-        miLoad.setLabel("Load Class...");
+        miLoad = new MenuItem("Load Class...");
         miLoad.setActionCommand(COMMAND_LOADCLASS);
         miLoad.addActionListener(this);
-        miExit = new MenuItem();
-        miExit.setLabel("Exit");
+        miExit = new MenuItem("Exit");
         miExit.setActionCommand(COMMAND_EXIT);
         miExit.addActionListener(this);
+        miChkAspect = new CheckboxMenuItem("Preserve Aspect Ratio", true);
+        miChkAspect.addItemListener(this);
 
-        // build menu
-        mFile = new Menu();
-        mFile.setLabel("File");
+        // build file menu
+        mFile = new Menu("File");
         mFile.add(miOpen);
         mFile.add(miLoad);
         mFile.add(miExit);
 
+        // build view menu
+        mView = new Menu("View");
+        mView.add(miChkAspect);
+
         // build menu bar
         mbMain = new MenuBar();
         mbMain.add(mFile);
+        mbMain.add(mView);
 
         return mbMain;
 
@@ -206,6 +213,14 @@ public final class Viewer extends WindowAdapter
         } else if (action.equals(COMMAND_EXIT)) {
             this.stop();
         }
+    }
+
+    /* Item Listener Interface */
+
+    @Override
+    public void itemStateChanged(ItemEvent e) {
+        final int state = e.getStateChange();
+        this.viewerComponent.setPreserveAspect(state == ItemEvent.SELECTED);
     }
 
     /* Window Adapter Methods */
