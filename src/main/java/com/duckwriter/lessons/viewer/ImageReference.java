@@ -2,7 +2,7 @@ package com.duckwriter.lessons.viewer;
 
 import java.awt.Image;
 
-class ImageReference extends Object {
+final class ImageReference extends Object {
 
     final Image image;
     int status;

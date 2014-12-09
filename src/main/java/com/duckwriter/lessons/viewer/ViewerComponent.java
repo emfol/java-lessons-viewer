@@ -190,7 +190,9 @@ public class ViewerComponent extends Canvas {
      */
 
     public void setImage(Image image) {
-        this.imageRef = new ImageReference(image);
+        this.imageRef = image != null
+            ? new ImageReference(image)
+            : null;
         this.shapeRef = null;
         this.needsRefresh = true;
         this.repaint();
@@ -230,6 +232,7 @@ public class ViewerComponent extends Canvas {
 
             // check if view needs to be cleared...
             if (viewResized || this.needsRefresh) {
+                // discard any possible clip...
                 g.setClip(0, 0, width, height);
                 g.clearRect(0, 0, width, height);
                 this.needsRefresh = false;
